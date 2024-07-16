@@ -1,0 +1,79 @@
+-- Creating the stage with the correct syntax for credentials
+CREATE OR REPLACE STAGE my_stage
+URL = 's3://xxxxxxxxxxxxxxxxxx/'
+CREDENTIALS = (AWS_KEY_ID = 'xxxxxxxxxxxxxxxxx' AWS_SECRET_KEY = 'xxxxxxxxxxxxxxxxxxxx');
+
+-- Describing the stage to verify it's created correctly
+DESC STAGE my_stage;
+
+
+CREATE OR REPLACE FILE FORMAT my_csv_format
+TYPE = 'CSV'
+FIELD_OPTIONALLY_ENCLOSED_BY = '"'
+SKIP_HEADER = 1;
+
+
+
+-- Creating the table
+CREATE OR REPLACE TABLE tblAlbum (
+    album_id STRING,
+    name STRING,
+    release_date DATE,
+    total_tracks INTEGER,
+    url STRING
+);
+
+CREATE OR REPLACE PIPE album_pipe
+auto_ingest= TRUE
+AS
+COPY INTO tblAlbum
+FROM @my_stage/transformed_data/album_data/
+FILE_FORMAT = (FORMAT_NAME = 'my_csv_format');
+
+DESC pipe album_pipe
+
+
+
+CREATE OR REPLACE TABLE TBLARTIST (
+    artist_id STRING,
+    artist_name STRING,
+    external_url STRING
+);
+
+CREATE OR REPLACE PIPE artist_pipe
+auto_ingest= TRUE
+AS
+COPY INTO TBLARTIST
+FROM @my_stage/transformed_data/artist_data/
+FILE_FORMAT = (FORMAT_NAME = 'my_csv_format');
+
+
+CREATE OR REPLACE TABLE tblSongs (
+    song_id STRING,
+    song_name STRING,
+    duration_ms INTEGER,
+    url STRING,
+    popularity INTEGER,
+    song_added DATE,
+    album_id STRING,
+    artist_id STRING
+    
+);
+
+
+CREATE OR REPLACE PIPE songs_pipe
+auto_ingest= TRUE
+AS
+COPY INTO TBLSONGS
+FROM @my_stage/transformed_data/artist_data/
+FILE_FORMAT = (FORMAT_NAME = 'my_csv_format');
+
+
+
+SELECT * FROM tblAlbum
+
+SELECT * FROM tblArtist
+
+SELECT * FROM tblSongs
+
+
